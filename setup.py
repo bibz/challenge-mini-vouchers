@@ -37,6 +37,7 @@ setup(
         "Programming Language :: Python :: 3.6",
     ],
     description="A minimal implementation of a voucher system.",
+    entry_points={"console_scripts": ["mini-vouchers = mini_vouchers.__main__:main"]},
     license="GNU General Public License v3 or later",
     long_description=README,
     name="mini-vouchers",
