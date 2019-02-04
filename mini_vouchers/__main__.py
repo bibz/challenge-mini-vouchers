@@ -69,12 +69,13 @@ def cmdline_args():
 
     parser.add_argument(
         "action",
-        choices=["print"],
+        choices=["print", "summary"],
         default="print",
         nargs="?",
         help=(
             "The action to execute. Print all vouchers in the system "
-            "(`print`).. Defaults to `%(default)s`."
+            "(`print`). Briefly describe the dataset (`summary`). Defaults to "
+            "`%(default)s`."
         ),
     )
 
@@ -162,6 +163,37 @@ def do_print(system: VoucherSystem, output: TextIO):
         output.write(f"{order.customer_id}, {order.order_id}, {barcodes}\n")
 
 
+def do_summary(system: VoucherSystem, output: TextIO):
+    """Briefly describe the dataset.
+
+    Print the total amount of available barcodes, orders, barcodes, and
+    customers known to the system.
+
+    :param system: The populated voucher system to print from.
+    :param output: The output stream to write to.
+
+    """
+    customers = set()
+    used_barcodes = 0
+
+    i = -1
+    for i, order in enumerate(system.get_orders()):
+        customers.add(order.customer_id)
+        used_barcodes += len(order.barcodes)
+
+    free_barcodes = len(system.get_available_barcodes())
+    total_barcodes = used_barcodes + free_barcodes
+    total_orders = i + 1
+    total_customers = len(customers)
+
+    output.write(
+        f"The dataset contains {total_orders} orders from {total_customers} "
+        "customers.\n"
+        f"There are {free_barcodes} barcodes available out of a total of "
+        f"{total_barcodes} barcodes.\n"
+    )
+
+
 def main():
     """Execute the Mini Vouchers program.
 
@@ -181,6 +213,8 @@ def main():
 
     if args.action == "print":
         do_print(system, args.output)
+    elif args.action == "summary":
+        do_summary(system, args.output)
     else:
         raise ValueError(f"Unknown action {args.action}")
 
