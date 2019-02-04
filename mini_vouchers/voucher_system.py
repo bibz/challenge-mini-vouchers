@@ -17,7 +17,8 @@
 
 """The Voucher System definition."""
 
-from typing import Callable, NamedTuple, Sequence, Set
+import logging
+from typing import Callable, Mapping, NamedTuple, Sequence, Set
 
 from mini_vouchers.csv_utils import ExportedBarcode, ExportedOrder
 
@@ -46,9 +47,15 @@ class VoucherSystem:
 
     """
 
+    _all_barcodes: Mapping[str, int]
+    """The pool of available barcodes mapped to their order identifier."""
+    _orders: Mapping[int, Order]
+    """The orders addressed by their identifier."""
+
     def __init__(self):
         """Initialise the system."""
-        raise NotImplementedError()
+        self._all_barcodes = {}
+        self._orders = {}
 
     def get_available_barcodes(self) -> Sequence[str]:
         """Get the available barcodes.
@@ -56,7 +63,12 @@ class VoucherSystem:
         :returns: A fresh sequence of the available barcodes, sorted by value.
 
         """
-        raise NotImplementedError()
+        return sorted(
+            filter(
+                lambda barcode: not self._all_barcodes[barcode],
+                self._all_barcodes.keys(),
+            )
+        )
 
     def get_orders(self, key: Callable[[Order], bool] = None) -> Sequence[Order]:
         """Get the orders known to the system.
@@ -65,7 +77,7 @@ class VoucherSystem:
         :returns: A fresh sequence of the orders.
 
         """
-        raise NotImplementedError()
+        return sorted(self._orders.values(), key=key)
 
     def populate(
         self,
@@ -133,4 +145,36 @@ class VoucherSystem:
         :param exported_orders: The orders previously exported.
 
         """
-        raise NotImplementedError()
+        # Populate the orders
+        for exported_order in exported_orders:
+            order_id, customer_id = exported_order
+
+            if order_id not in self._orders:
+                logging.debug("Adding new order %s", exported_order)
+                self._orders[order_id] = Order(order_id, customer_id, set())
+            else:
+                logging.warning("Discarding duplicate order %s", exported_order)
+
+        # Populate the barcodes
+        for exported_barcode in exported_barcodes:
+            barcode, order_id = exported_barcode
+
+            if barcode in self._all_barcodes:
+                logging.warning("Discarding duplicate barcode %s", exported_barcode)
+                continue
+
+            logging.debug("Adding new barcode %s", exported_barcode)
+            self._all_barcodes[barcode] = order_id
+
+            if order_id and order_id in self._orders:
+                self._orders[order_id].barcodes.add(barcode)
+            elif order_id:
+                logging.warning(
+                    "Discarding barcode %s from unknown order", exported_barcode
+                )
+
+        # Validate the orders
+        for order in list(self._orders.values()):
+            if not order.barcodes:
+                logging.warning("Discarding order without barcodes %s", order)
+                self._orders.pop(order.order_id)
