@@ -17,6 +17,8 @@
 
 """The representation and utilities to handle CSV serialisation."""
 
+import csv
+import logging
 from typing import NamedTuple, Optional, Sequence
 
 
@@ -78,7 +80,21 @@ def parse_barcodes(csv_input: Sequence[str]) -> Sequence[ExportedBarcode]:
     :yields: The sequence of :py:class:`ExportedBarcode`s read.
 
     """
-    raise NotImplementedError()
+    reader = csv.DictReader(csv_input)
+
+    # Make sure the field names are following the schema as per the assignment.
+    assert "barcode" in reader.fieldnames
+    assert "order_id" in reader.fieldnames
+
+    for row in reader:
+        barcode = row["barcode"]
+        order_id = int(row["order_id"]) if row["order_id"] else None
+
+        if not barcode:
+            logging.info("Ignoring row without barcode: %s", row)
+            continue
+
+        yield ExportedBarcode(barcode, order_id)
 
 
 def parse_orders(csv_input: Sequence[str]) -> Sequence[ExportedOrder]:
@@ -119,4 +135,18 @@ def parse_orders(csv_input: Sequence[str]) -> Sequence[ExportedOrder]:
     :yields: The sequence of :py:class:`ExportedOrder`s read.
 
     """
-    raise NotImplementedError()
+    reader = csv.DictReader(csv_input)
+
+    # Make sure the field names are following the schema as per the assignment.
+    assert "order_id" in reader.fieldnames
+    assert "customer_id" in reader.fieldnames
+
+    for row in reader:
+        order_id = int(row["order_id"]) if row["order_id"] else None
+        customer_id = int(row["customer_id"]) if row["customer_id"] else None
+
+        if not order_id or not customer_id:
+            logging.info("Ignoring row missing identifiers: %s", row)
+            continue
+
+        yield ExportedOrder(order_id, customer_id)
