@@ -1,0 +1,29 @@
+@startuml
+
+note as disclaimer
+    This overly simplistic data model assumes that
+    all barcodes live in the system and are all siblings.
+    That is, they are all issued under a common entity.
+end note
+
+System *- Barcode
+System *- Customer
+System *- Order
+
+Order "*" -- "1" Customer : belongs to >
+Order "1" o- "1..*" Barcode : assigns >
+
+class Barcode {
+    value: str
+}
+class Customer {
+    id: int
+    ...
+}
+class Order {
+    id: int
+}
+
+note right of Customer: The identifier should be indexed.
+
+@enduml
