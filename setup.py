@@ -29,7 +29,7 @@ setup(
     author="Borjan Tchakaloff",
     author_email="borjan@tchakaloff.fr",
     classifiers=[
-        "Development Status :: 2 - Pre-Alpha",
+        "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
         "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
         "Natural Language :: English",
@@ -43,5 +43,5 @@ setup(
     name="mini-vouchers",
     packages=find_packages(include=["mini_vouchers"]),
     python_requires="~=3.6",
-    version="0.1.0",
+    version="1.0.0",
 )
