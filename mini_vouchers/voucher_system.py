@@ -129,50 +129,36 @@ class VoucherSystem:
         [Order(order_id=10, customer_id=7, barcodes={'a'})]
 
         The data is first cleaned (duplicates are dropped) and then validated
-        (bad states are dropped).
+        (bad states are dropped):
 
-        Exported data cleaning
-        ----------------------
+        #.  Duplicate **order** exports are ignored based on the order
+            identifier value:
 
-        Order identifier unicity
-        ~~~~~~~~~~~~~~~~~~~~~~~~
+            >>> exported_barcodes = [ExportedBarcode('a', 10)]
+            >>> exported_orders = [ExportedOrder(10, 7), ExportedOrder(10, 5)]
+            >>> system = VoucherSystem()
+            >>> system.populate(exported_barcodes, exported_orders)
+            >>> system.get_orders()
+            [Order(order_id=10, customer_id=7, barcodes={'a'})]
 
-        Duplicate exports are ignored based on the order identifier value:
+        #.  Duplicate **barcode** exports are ignored based on the barcode
+            value -- even if they hold a different barcode attribution:
 
-        >>> exported_barcodes = [ExportedBarcode('a', 10)]
-        >>> exported_orders = [ExportedOrder(10, 7), ExportedOrder(10, 5)]
-        >>> system = VoucherSystem()
-        >>> system.populate(exported_barcodes, exported_orders)
-        >>> system.get_orders()
-        [Order(order_id=10, customer_id=7, barcodes={'a'})]
+            >>> exported_barcodes = [ExportedBarcode('a'), ExportedBarcode('a', 1)]
+            >>> exported_orders = []
+            >>> system = VoucherSystem()
+            >>> system.populate(exported_barcodes, exported_orders)
+            >>> system.get_available_barcodes()
+            ['a']
 
-        Barcode unicity
-        ~~~~~~~~~~~~~~~
+        #.  An order must have barcodes assigned to it, it is otherwise dropped:
 
-        Duplicate exports are ignored based on the barcode value -- even if hold
-        a different barcode attribution:
-
-        >>> exported_barcodes = [ExportedBarcode('a'), ExportedBarcode('a', 1)]
-        >>> exported_orders = []
-        >>> system = VoucherSystem()
-        >>> system.populate(exported_barcodes, exported_orders)
-        >>> system.get_available_barcodes()
-        ['a']
-
-        Exported data validation
-        ------------------------
-
-        No empty order
-        ~~~~~~~~~~~~~~
-
-        An order must have barcodes assigned to it, it is otherwise dropped:
-
-        >>> exported_barcodes = []
-        >>> exported_orders = [ExportedOrder(10, 7)]
-        >>> system = VoucherSystem()
-        >>> system.populate(exported_barcodes, exported_orders)
-        >>> len(system.get_orders())
-        0
+            >>> exported_barcodes = []
+            >>> exported_orders = [ExportedOrder(10, 7)]
+            >>> system = VoucherSystem()
+            >>> system.populate(exported_barcodes, exported_orders)
+            >>> len(system.get_orders())
+            0
 
         :param exported_barcodes: The barcodes previously exported.
         :param exported_orders: The orders previously exported.

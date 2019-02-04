@@ -4,11 +4,6 @@ Mini Vouchers
 
 A minimal implementation of a voucher system.
 
-Usage
------
-
-TODO
-
 Installation
 ------------
 
@@ -24,6 +19,30 @@ Requirements
 ^^^^^^^^^^^^
 
 Python 3.6 is required.
+
+Documentation
+^^^^^^^^^^^^^
+
+The main entrypoint is documented as a regular command line interface:
+
+.. code-block:: shell
+
+    $ mini-vouchers --help
+    ...
+
+The project itself is mainly documented through its docstrings.
+
+If you are so enclined, you can generate a standalone documentation with
+Sphinx:
+
+.. code-block:: shell
+
+    $ virtualenv -p python3 venv
+    $ . ./venv/bin/activate
+    (venv)$ pip install -r requirements-dev.txt
+    (venv)$ cd docs
+    (venv)$ make html
+    # or `make help` to list all possible targets
 
 Development
 ^^^^^^^^^^^

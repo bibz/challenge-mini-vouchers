@@ -58,26 +58,26 @@ def parse_barcodes(csv_input: Sequence[str]) -> Iterator[ExportedBarcode]:
     The column ordering does not matter and is determined based on the first
     line (the header):
 
-    >>> data1 = parse_barcodes(["barcode,order_id", "abcdef,123"])
-    >>> data2 = parse_barcodes(["order_id,barcode", "123,abcdef"])
-    >>> list(data1) == list(data2)
-    True
+        >>> data1 = parse_barcodes(["barcode,order_id", "abcdef,123"])
+        >>> data2 = parse_barcodes(["order_id,barcode", "123,abcdef"])
+        >>> list(data1) == list(data2)
+        True
 
     It is assumed that order identifiers are base 10 integers:
 
-    >>> next(parse_barcodes(["barcode,order_id", "abc,z"]))
-    Traceback (most recent call last):
-        ...
-    ValueError: invalid literal for int() with base 10: 'z'
+        >>> next(parse_barcodes(["barcode,order_id", "abc,z"]))
+        Traceback (most recent call last):
+            ...
+        ValueError: invalid literal for int() with base 10: 'z'
 
     Lines without barcodes will be ignored:
 
-    >>> data = parse_barcodes(["barcode,order_id", ",123"])
-    >>> len(list(data))
-    0
+        >>> data = parse_barcodes(["barcode,order_id", ",123"])
+        >>> len(list(data))
+        0
 
-    :param:`csv_input`: The sequence of CSV-like lines to parse.
-    :yields: The :py:class:`ExportedBarcode`s as they are read.
+    :param csv_input: The sequence of CSV-like lines to parse.
+    :yields: The :py:class:`ExportedBarcode` as they are read.
 
     """
     reader = csv.DictReader(csv_input)
@@ -109,30 +109,30 @@ def parse_orders(csv_input: Sequence[str]) -> Iterator[ExportedOrder]:
     The column ordering does not matter and is determined based on the first
     line:
 
-    >>> data1 = parse_orders(["order_id,customer_id", "123,456"])
-    >>> data2 = parse_orders(["customer_id,order_id", "456,123"])
-    >>> list(data1) == list(data2)
-    True
+        >>> data1 = parse_orders(["order_id,customer_id", "123,456"])
+        >>> data2 = parse_orders(["customer_id,order_id", "456,123"])
+        >>> list(data1) == list(data2)
+        True
 
     It is assumed that customer and order identifiers are base 10 integers:
 
-    >>> next(parse_orders(["order_id,customer_id", "a,0"]))
-    Traceback (most recent call last):
-        ...
-    ValueError: invalid literal for int() with base 10: 'a'
-    >>> next(parse_orders(["order_id,customer_id", "0,b"]))
-    Traceback (most recent call last):
-        ...
-    ValueError: invalid literal for int() with base 10: 'b'
+        >>> next(parse_orders(["order_id,customer_id", "a,0"]))
+        Traceback (most recent call last):
+            ...
+        ValueError: invalid literal for int() with base 10: 'a'
+        >>> next(parse_orders(["order_id,customer_id", "0,b"]))
+        Traceback (most recent call last):
+            ...
+        ValueError: invalid literal for int() with base 10: 'b'
 
     Lines without both identifiers defined are ignored:
 
-    >>> data = parse_orders(["order_id,customer_id", ",", "1,", ",1"])
-    >>> len(list(data))
-    0
+        >>> data = parse_orders(["order_id,customer_id", ",", "1,", ",1"])
+        >>> len(list(data))
+        0
 
     :param csv_input: The sequence of CSV-like lines to parse.
-    :yields: The :py:class:`ExportedOrder`s as they are read.
+    :yields: The :py:class:`ExportedOrder` as they are read.
 
     """
     reader = csv.DictReader(csv_input)
