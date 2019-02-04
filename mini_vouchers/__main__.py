@@ -69,13 +69,15 @@ def cmdline_args():
 
     parser.add_argument(
         "action",
-        choices=["print", "summary"],
+        choices=["print", "summary", "top5"],
         default="print",
         nargs="?",
         help=(
             "The action to execute. Print all vouchers in the system "
-            "(`print`). Briefly describe the dataset (`summary`). Defaults to "
-            "`%(default)s`."
+            "(`print`). Briefly describe the dataset (`summary`). Print the "
+            "identifier of the customers who bought the most tickets in a "
+            "machine-readable format where each line is `customer_id, "
+            "amount_of_barcodes` (`top5`). Defaults to `%(default)s`."
         ),
     )
 
@@ -194,6 +196,24 @@ def do_summary(system: VoucherSystem, output: TextIO):
     )
 
 
+def do_top5(system: VoucherSystem, output: TextIO):
+    """Print the top 5 customers.
+
+    Print a list of the five customers who bought the most barcodes in the form
+    of:
+
+        customer_id, amount_of_barcodes
+
+    The lines are sorted by total amount of barcodes in descending order.
+
+    :param system: The populated voucher system to print from.
+    :param output: The output stream to write to.
+
+    """
+    for customer_id, amount in system.get_top_customers(5):
+        output.write(f"{customer_id}, {amount}\n")
+
+
 def main():
     """Execute the Mini Vouchers program.
 
@@ -215,6 +235,8 @@ def main():
         do_print(system, args.output)
     elif args.action == "summary":
         do_summary(system, args.output)
+    elif args.action == "top5":
+        do_top5(system, args.output)
     else:
         raise ValueError(f"Unknown action {args.action}")
 

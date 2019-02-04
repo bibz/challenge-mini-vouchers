@@ -17,8 +17,9 @@
 
 """The Voucher System definition."""
 
+from collections import Counter
 import logging
-from typing import Callable, Mapping, NamedTuple, Sequence, Set
+from typing import Callable, Mapping, NamedTuple, Sequence, Set, Tuple
 
 from mini_vouchers.csv_utils import ExportedBarcode, ExportedOrder
 
@@ -78,6 +79,38 @@ class VoucherSystem:
 
         """
         return sorted(self._orders.values(), key=key)
+
+    def get_top_customers(self, limit: int) -> Sequence[Tuple[int, int]]:
+        """Get the top customers.
+
+        Compute and yield the top customers based on how many barcodes they
+        ordered.
+
+        >>> # Begin the range at 1 to avoid empty barcodes.
+        >>> exported_barcodes = [ExportedBarcode('a'*i, 100+i) for i in range(1,5)]
+        >>> exported_barcodes += [ExportedBarcode('b'*i, 200+i) for i in range(1,20)]
+        >>> exported_barcodes += [ExportedBarcode('c'*i, 300+i) for i in range(1,10)]
+        >>> exported_orders = [ExportedOrder(100+i, 33) for i in range(1,5)]
+        >>> exported_orders += [ExportedOrder(200+i, 44) for i in range(1,20)]
+        >>> exported_orders += [ExportedOrder(300+i, 55) for i in range(1,10)]
+        >>> system = VoucherSystem()
+        >>> system.populate(exported_barcodes, exported_orders)
+        >>> system.get_top_customers(2)
+        [(44, 19), (55, 9)]
+
+        :param limit: The amount of top customers to return.
+        :returns: A fresh sequence of tuples of customer identifier and their
+            amount of barcodes, ranked from high (most barcodes) to low.
+
+        """
+        assert limit >= 0
+
+        customer_total_barcodes = Counter()
+
+        for order in self.get_orders():
+            customer_total_barcodes.update({order.customer_id: len(order.barcodes)})
+
+        return customer_total_barcodes.most_common()[:limit]
 
     def populate(
         self,
