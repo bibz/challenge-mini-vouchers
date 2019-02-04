@@ -19,7 +19,7 @@
 
 from collections import Counter
 import logging
-from typing import Callable, Mapping, NamedTuple, Sequence, Set, Tuple
+from typing import Any, Callable, Dict, NamedTuple, Optional, Sequence, Set, Tuple
 
 from mini_vouchers.csv_utils import ExportedBarcode, ExportedOrder
 
@@ -48,9 +48,9 @@ class VoucherSystem:
 
     """
 
-    _all_barcodes: Mapping[str, int]
+    _all_barcodes: Dict[str, Optional[int]]
     """The pool of available barcodes mapped to their order identifier."""
-    _orders: Mapping[int, Order]
+    _orders: Dict[int, Order]
     """The orders addressed by their identifier."""
 
     def __init__(self):
@@ -71,7 +71,7 @@ class VoucherSystem:
             )
         )
 
-    def get_orders(self, key: Callable[[Order], bool] = None) -> Sequence[Order]:
+    def get_orders(self, key: Callable[[Order], Any] = None) -> Sequence[Order]:
         """Get the orders known to the system.
 
         :param key: The sorting function to apply. Defaults to sorted by value.
@@ -105,7 +105,7 @@ class VoucherSystem:
         """
         assert limit >= 0
 
-        customer_total_barcodes = Counter()
+        customer_total_barcodes: Counter = Counter()
 
         for order in self.get_orders():
             customer_total_barcodes.update({order.customer_id: len(order.barcodes)})
@@ -190,18 +190,18 @@ class VoucherSystem:
 
         # Populate the barcodes
         for exported_barcode in exported_barcodes:
-            barcode, order_id = exported_barcode
+            barcode, opt_order_id = exported_barcode
 
             if barcode in self._all_barcodes:
                 logging.warning("Discarding duplicate barcode %s", exported_barcode)
                 continue
 
             logging.debug("Adding new barcode %s", exported_barcode)
-            self._all_barcodes[barcode] = order_id
+            self._all_barcodes[barcode] = opt_order_id
 
-            if order_id and order_id in self._orders:
-                self._orders[order_id].barcodes.add(barcode)
-            elif order_id:
+            if opt_order_id and opt_order_id in self._orders:
+                self._orders[opt_order_id].barcodes.add(barcode)
+            elif opt_order_id:
                 logging.warning(
                     "Discarding barcode %s from unknown order", exported_barcode
                 )

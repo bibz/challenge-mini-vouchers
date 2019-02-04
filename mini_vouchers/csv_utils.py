@@ -19,7 +19,7 @@
 
 import csv
 import logging
-from typing import NamedTuple, Optional, Sequence
+from typing import Iterator, NamedTuple, Optional, Sequence
 
 
 class ExportedBarcode(NamedTuple):
@@ -44,7 +44,7 @@ class ExportedOrder(NamedTuple):
     """The customer identifier."""
 
 
-def parse_barcodes(csv_input: Sequence[str]) -> Sequence[ExportedBarcode]:
+def parse_barcodes(csv_input: Sequence[str]) -> Iterator[ExportedBarcode]:
     """Yield barcodes optionally assigned to orders from a CSV-like sequence.
 
     >>> data = parse_barcodes(["barcode,order_id", "abc,1", "def,42", "g,"])
@@ -77,7 +77,7 @@ def parse_barcodes(csv_input: Sequence[str]) -> Sequence[ExportedBarcode]:
     0
 
     :param:`csv_input`: The sequence of CSV-like lines to parse.
-    :yields: The sequence of :py:class:`ExportedBarcode`s read.
+    :yields: The :py:class:`ExportedBarcode`s as they are read.
 
     """
     reader = csv.DictReader(csv_input)
@@ -97,7 +97,7 @@ def parse_barcodes(csv_input: Sequence[str]) -> Sequence[ExportedBarcode]:
         yield ExportedBarcode(barcode, order_id)
 
 
-def parse_orders(csv_input: Sequence[str]) -> Sequence[ExportedOrder]:
+def parse_orders(csv_input: Sequence[str]) -> Iterator[ExportedOrder]:
     """Yield orders and their customers from a CSV-like sequence.
 
     >>> data = parse_orders(["order_id,customer_id", "1,1", "24,42"])
@@ -132,7 +132,7 @@ def parse_orders(csv_input: Sequence[str]) -> Sequence[ExportedOrder]:
     0
 
     :param csv_input: The sequence of CSV-like lines to parse.
-    :yields: The sequence of :py:class:`ExportedOrder`s read.
+    :yields: The :py:class:`ExportedOrder`s as they are read.
 
     """
     reader = csv.DictReader(csv_input)
