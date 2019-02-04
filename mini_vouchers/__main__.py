@@ -27,6 +27,36 @@ from mini_vouchers.csv_utils import parse_barcodes, parse_orders
 from mini_vouchers.voucher_system import VoucherSystem
 
 
+LOG_FORMAT = "%(asctime)s | [%(levelname)s] %(name)s: %(message)s"
+LOG_LEVELS = [
+    logging.NOTSET,
+    logging.DEBUG,
+    logging.INFO,
+    logging.WARNING,
+    logging.ERROR,
+    logging.CRITICAL,
+]
+DEFAULT_LOG_LEVEL = logging.WARNING
+
+
+def get_log_level(verbose: int, quiet: int) -> int:
+    """Compute the log level.
+
+    The log level base value is :py:const:`DEFAULT_LOG_LEVEL` and will range
+    through :py:const:`LOG_LEVELS`.
+
+    :param verbose: Number of levels to increase log level.
+    :param quiet: Number of levels to decrease log level.
+    :returns: The log level.
+    """
+    assert verbose >= 0 and quiet >= 0
+
+    default_index = LOG_LEVELS.index(DEFAULT_LOG_LEVEL)
+    index = min(len(LOG_LEVELS) - 1, max(0, default_index + quiet - verbose))
+
+    return LOG_LEVELS[index]
+
+
 def cmdline_args():
     """Define and parse command line arguments.
 
@@ -59,7 +89,29 @@ def cmdline_args():
         "-o",
         default=sys.stdout,
         type=argparse.FileType("w"),
-        help="Output file to print the vouchers to.",
+        help="Output file to print the vouchers to. Defaults to `stdout`.",
+    )
+
+    parser.add_argument(
+        "--log",
+        "-l",
+        default=sys.stderr,
+        type=argparse.FileType("w"),
+        help="Log file. Defaults to `stderr`.",
+    )
+    parser.add_argument(
+        "--quiet",
+        "-q",
+        default=0,
+        action="count",
+        help="Decrease log level verbosity. May be used several times.",
+    )
+    parser.add_argument(
+        "--verbose",
+        "-v",
+        default=0,
+        action="count",
+        help="Increase log level verbosity. May be used several times.",
     )
 
     return parser.parse_args()
@@ -87,8 +139,10 @@ def main():
     The lines are sorted by customer identifer and order identifier.
 
     """
-    logging.basicConfig(level=logging.DEBUG)
     args = cmdline_args()
+    logging.basicConfig(
+        format=LOG_FORMAT, level=get_log_level(args.verbose, args.quiet)
+    )
 
     exported_barcodes = parse_barcodes(trim_lines(args.barcodes))
     exported_orders = parse_orders(trim_lines(args.orders))
