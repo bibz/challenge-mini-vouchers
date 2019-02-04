@@ -66,6 +66,18 @@ def cmdline_args():
 
     """
     parser = argparse.ArgumentParser()
+
+    parser.add_argument(
+        "action",
+        choices=["print"],
+        default="print",
+        nargs="?",
+        help=(
+            "The action to execute. Print all vouchers in the system "
+            "(`print`).. Defaults to `%(default)s`."
+        ),
+    )
+
     parser.add_argument(
         "--barcodes",
         default="barcodes.csv",
@@ -128,15 +140,33 @@ def trim_lines(text_stream: TextIO):
         yield line.strip()
 
 
-def main():
-    """Execute the Mini Vouchers program.
+def do_print(system: VoucherSystem, output: TextIO):
+    """Print all vouchers in the system.
 
-    Read the dataset from the barcodes and orders files and print a list of
-    vouchers per customer in the form of:
+    Print a list of vouchers per customer in the form of:
 
         customer_id, order_id, barcode[, barcode...]
 
     The lines are sorted by customer identifer and order identifier.
+
+    :param system: The populated voucher system to print from.
+    :param output: The output stream to write to.
+
+    """
+    for order in system.get_orders(
+        key=lambda order: (order.customer_id, order.order_id)
+    ):
+        # Flatten the barcodes into a comma-separated list of barcodes or into
+        # an empty string.
+        barcodes = ", ".join(order.barcodes)
+        output.write(f"{order.customer_id}, {order.order_id}, {barcodes}\n")
+
+
+def main():
+    """Execute the Mini Vouchers program.
+
+    Read the dataset from the barcodes and orders files, and act on the system
+    based on the command line action.
 
     """
     args = cmdline_args()
@@ -149,13 +179,10 @@ def main():
     system = VoucherSystem()
     system.populate(exported_barcodes, exported_orders)
 
-    for order in system.get_orders(
-        key=lambda order: (order.customer_id, order.order_id)
-    ):
-        # Flatten the barcodes into a comma-separated list of barcodes or into
-        # an empty string.
-        barcodes = ", ".join(order.barcodes)
-        args.output.write(f"{order.customer_id}, {order.order_id}, {barcodes}\n")
+    if args.action == "print":
+        do_print(system, args.output)
+    else:
+        raise ValueError(f"Unknown action {args.action}")
 
 
 if __name__ == "__main__":
